@@ -12,6 +12,7 @@ flask-cors = "*"
 flask-jwt-extended = "*"
 pandas = "*"
 gunicorn = "*"
+numpy = "*"
 
 [dev-packages]
 
