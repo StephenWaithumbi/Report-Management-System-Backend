@@ -21,7 +21,7 @@ app.config['JWT_SECRET_KEY'] = 'your-jwt-secret-key'
 db.init_app(app)
 migrate = Migrate(app, db)
 jwt = JWTManager(app)
-CORS(app, origins=["http://127.0.0.1:5173"], supports_credentials=True)
+CORS(app, origins=["http://127.0.0.1:5173", "https://reports-management-frontend.vercel.app/"], supports_credentials=True)
 
 @jwt.user_identity_loader
 def user_identity_lookup(user):
