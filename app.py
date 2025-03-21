@@ -296,9 +296,136 @@ def update_profile():
         return jsonify({"message": "Profile updated successfully"}), 200
     except Exception as e:
         db.session.rollback()
-        return jsonify({"error": str(e)}), 500    
+        return jsonify({"error": str(e)}), 500  
+
+# Fetch all users (for admin)
+@app.route('/users', methods=['GET'])
+@jwt_required()
+def get_users():
+    if current_user.role != 'admin':
+        return jsonify({"error": "Unauthorized"}), 403
+
+    try:
+        users = User.query.all()
+        users_data = [{
+            "id": user.id,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "email": user.email,
+            "department": user.department.name,
+            "role": user.role
+        } for user in users]
+        return jsonify(users_data), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# Delete a user (for admin)
+@app.route('/users/<int:user_id>', methods=['DELETE'])
+@jwt_required()
+def delete_user(user_id):
+    if current_user.role != 'admin':
+        return jsonify({"error": "Unauthorized"}), 403
+
+    try:
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+
+        db.session.delete(user)
+        db.session.commit()
+        return jsonify({"message": "User deleted successfully"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500  
+    
+# Reset a user's password (for admin)
+@app.route('/users/<int:user_id>/reset-password', methods=['PUT'])
+@jwt_required()
+def reset_user_password(user_id):
+    if current_user.role != 'admin':
+        return jsonify({"error": "Unauthorized"}), 403
+
+    try:
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+
+        # Generate a default password (e.g., "password123")
+        default_password = generate_password_hash("password123")
+        user.password = default_password
+        db.session.commit()
+        return jsonify({"message": "Password reset successfully"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+# Fetch all departments (for admin)
+@app.route('/departments', methods=['GET'])
+@jwt_required()
+def get_departments():
+    if current_user.role != 'admin':
+        return jsonify({"error": "Unauthorized"}), 403
+
+    try:
+        departments = Department.query.all()
+        departments_data = [{
+            "id": dept.id,
+            "name": dept.name
+        } for dept in departments]
+        return jsonify(departments_data), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+# Add a new department (for admin)
+@app.route('/departments', methods=['POST'])
+@jwt_required()
+def add_department():
+    if current_user.role != 'admin':
+        return jsonify({"error": "Unauthorized"}), 403
+
+    try:
+        data = request.get_json()
+        if not data or "name" not in data:
+            return jsonify({"error": "Missing department name"}), 400
+
+        # Check if the department already exists
+        if Department.query.filter_by(name=data["name"]).first():
+            return jsonify({"error": "Department already exists"}), 409
+
+        department = Department(name=data["name"])
+        db.session.add(department)
+        db.session.commit()
+        return jsonify({"message": "Department added successfully"}), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+# Delete a department (for admin)
+@app.route('/departments/<int:department_id>', methods=['DELETE'])
+@jwt_required()
+def delete_department(department_id):
+    if current_user.role != 'admin':
+        return jsonify({"error": "Unauthorized"}), 403
+
+    try:
+        department = Department.query.get(department_id)
+        if not department:
+            return jsonify({"error": "Department not found"}), 404
+
+        # Check if the department has users
+        if User.query.filter_by(department_id=department_id).first():
+            return jsonify({"error": "Cannot delete department with users! Delete the Users First"}), 400
+
+        db.session.delete(department)
+        db.session.commit()
+        return jsonify({"message": "Department deleted successfully"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run(debug=True)
+
+    
