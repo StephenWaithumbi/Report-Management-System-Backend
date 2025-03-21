@@ -14,7 +14,7 @@ from models import db, User, Department, Service
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://report_managment_system_user:ZmmWAP90xkfNxVGB0PoDHKo6F8jsIKpn@dpg-cvelp67noe9s73eplb4g-a.oregon-postgres.render.com/report_managment_system'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = 'your-jwt-secret-key'
 
