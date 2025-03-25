@@ -39,6 +39,10 @@ def register():
     if not all(k in data for k in required):
         return jsonify({"error": "Missing required fields"}), 400
 
+    # Check email domain
+    if not data['email'].lower().endswith('@ag.go.ke'):
+        return jsonify({"error": "Email must end with @ag.go.ke"}), 400
+
     if User.query.filter_by(email=data['email']).first():
         return jsonify({"error": "Email already exists"}), 409
 
